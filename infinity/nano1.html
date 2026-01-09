@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nano Pumpkin — Intelligence Scaled.</title>
+    <meta name="description" content="Nano Pumpkin blends AI performance with human creativity. We build websites, social campaigns, and automation systems for ambitious brands worldwide.">
+    <meta name="author" content="Nano Pumpkin">
+    <link rel="canonical" href="https://nanopumpkin.com/">
+
+    <meta property="og:title" content="Nano Pumpkin — Intelligence Scaled">
+    <meta property="og:description" content="Nano Pumpkin blends AI performance with human creativity. We build websites, social campaigns, and automation systems for ambitious brands worldwide.">
+    <meta property="og:type" content="website">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        bg: '#050507',
+                        surface: '#0F0F12',
+                        text: '#EDEDEF',
+                        muted: '#9CA3AF',
+                        pumpkin: '#FF6B00',
+                        electric: '#3B82F6',
+                        border: 'rgba(255, 255, 255, 0.08)'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    },
+                    animation: {
+                        'float': 'float 8s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #050507;
+            color: #EDEDEF;
+            overflow-x: hidden;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+            mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+        }
+
+        .spotlight-card {
+            background-color: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .spotlight-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(255, 255, 255, 0.06), transparent 40%);
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .spotlight-card:hover::before { opacity: 1; }
+
+        .spotlight-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .card-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .text-gradient-hero {
+            background: linear-gradient(to bottom right, #ffffff 30%, #9ca3af 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .text-gradient-brand {
+            background: linear-gradient(135deg, #FF6B00 0%, #F59E0B 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-glass {
+            background: rgba(5, 5, 7, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        section { scroll-margin-top: 120px; }
+
+        .modal {
+            transition: opacity 0.3s ease-in-out, visibility 0.3s;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .modal.open { opacity: 1; visibility: visible; }
+
+        .nav-link {
+            position: relative;
+            color: #9CA3AF;
+            transition: color 0.3s;
+        }
+
+        .nav-link:hover { color: #ffffff; }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: #FF6B00;
+            transition: width 0.3s;
+        }
+
+        .nav-link:hover::after { width: 100%; }
+
+        .logo-glow {
+            filter: drop-shadow(0 0 30px rgba(255, 107, 0, 0.5));
+        }
+
+        .portfolio-image-wrapper {
+            position: relative;
+            overflow: hidden;
+        }
+        .portfolio-image-wrapper img {
+            transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .group:hover .portfolio-image-wrapper img {
+            transform: scale(1.08);
+        }
+    </style>
+</head>
+<body class="font-sans antialiased selection:bg-pumpkin/30 selection:text-white">
+
+    <!-- HEADER -->
+    <header class="fixed w-full top-0 z-50 nav-glass">
+        <div class="container mx-auto px-6 h-24 flex items-center justify-between">
+            <a href="#" class="flex flex-col items-center justify-center group relative z-20 min-w-[120px]">
+                <div class="relative">
+                    <div class="absolute inset-0 bg-pumpkin/20 rounded-full blur-xl scale-110 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <img src="logo2.png" alt="Nano Pumpkin Logo" class="h-14 w-auto object-contain transition-all duration-500 group-hover:scale-105 logo-glow relative z-10" onerror="this.src='https://placehold.co/100x100/FF6B00/FFFFFF?text=NP'">
+                </div>
+                <span class="mt-1 font-display text-[10px] font-bold tracking-[0.2em] text-white/90 group-hover:text-pumpkin transition-colors lowercase">
+                    nano pumpkin
+                </span>
+            </a>
+
+            <div class="hidden md:flex items-center gap-12">
+                <nav class="flex items-center gap-10 text-sm font-medium">
+                    <a href="#services" class="nav-link">Services</a>
+                    <a href="#portfolio" class="nav-link">Portfolio</a>
+                    <a href="#reviews" class="nav-link">Reviews</a>
+                    <a href="#about" class="nav-link">About</a>
+                </nav>
+
+                <button onclick="openModal()" class="group relative px-7 py-3 overflow-hidden rounded-full bg-white text-bg font-bold text-sm transition-all hover:scale-105 hover:shadow-[0_0_25px_rgba(255,255,255,0.3)]">
+                    <span class="relative z-10 group-hover:text-pumpkin transition-colors">Get Sample Pack</span>
+                </button>
+            </div>
+
+            <button id="mobile-menu-btn" class="md:hidden text-2xl text-white hover:text-pumpkin transition-colors p-2">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+
+        <div id="mobile-menu" class="hidden md:hidden bg-bg/95 backdrop-blur-xl border-b border-border absolute w-full top-[96px] left-0 shadow-2xl">
+            <div class="flex flex-col px-8 py-8 space-y-6 text-center">
+                <a href="#services" class="text-base font-medium text-gray-200 hover:text-white">Services</a>
+                <a href="#portfolio" class="text-base font-medium text-gray-200 hover:text-white">Portfolio</a>
+                <a href="#reviews" class="text-base font-medium text-gray-200 hover:text-white">Reviews</a>
+                <a href="#about" class="text-base font-medium text-gray-200 hover:text-white">About</a>
+                <button onclick="openModal()" class="w-full text-center px-5 py-4 bg-pumpkin text-white rounded-full font-bold text-sm mt-4">
+                    Get Sample Pack
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section id="home" class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden min-h-screen flex items-center justify-center">
+        <div id="canvas-container"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#050507_90%)] pointer-events-none"></div>
+
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="max-w-5xl mx-auto text-center flex flex-col items-center reveal active">
+                <div class="inline-flex items-center gap-3 px-4 py-1.5 mb-10 border border-white/10 rounded-full bg-white/5 backdrop-blur-md animate-float">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-pumpkin opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-pumpkin"></span>
+                    </span>
+                    <span class="text-[10px] font-bold text-white uppercase tracking-[0.25em]">Next-Gen AI Agency</span>
+                </div>
+
+                <h1 class="font-display font-bold text-5xl sm:text-6xl md:text-8xl lg:text-9xl leading-[0.95] mb-8 tracking-tight">
+                    <span class="text-gradient-hero">Organic Growth</span><br>
+                    <span class="text-gradient-brand">Powered by AI.</span>
+                </h1>
+
+                <p class="text-lg md:text-xl text-muted/80 mb-12 max-w-2xl mx-auto leading-relaxed font-light">
+                    Nano Pumpkin fuses elite human creativity with space-age automation. We plant the seeds of digital dominance for Solar and Real Estate brands.
+                </p>
+
+                <div class="flex flex-col sm:flex-row justify-center items-center gap-6 w-full">
+                    <button onclick="openModal()" class="group relative px-10 py-5 bg-white text-black rounded-full font-bold text-sm uppercase tracking-widest overflow-hidden transition-transform hover:scale-105 hover:shadow-[0_0_40px_rgba(255,255,255,0.4)]">
+                        <span class="relative z-10 flex items-center">Get free sample pack <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i></span>
+                    </button>
+                    <a href="#portfolio" class="px-10 py-5 border border-white/10 text-white rounded-full font-bold text-sm uppercase tracking-widest hover:bg-white/5 transition-all backdrop-blur-sm">
+                        View Portfolio
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- EXPERTISE ROW -->
+    <section class="py-10 relative z-10 border-y border-white/5">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-3 gap-8 divide-y md:divide-y-0 md:divide-x divide-white/5">
+                <div class="p-8 text-center md:text-left reveal group">
+                    <div class="text-pumpkin text-2xl mb-4 opacity-80 group-hover:opacity-100 transition-opacity"><i class="fas fa-bolt"></i></div>
+                    <h3 class="font-display font-bold text-lg text-white mb-2">Speed (AI + Human)</h3>
+                    <p class="text-sm text-muted leading-relaxed">Deliverables in 24–72 hours with expert human polish.</p>
+                </div>
+                <div class="p-8 text-center md:text-left reveal group" style="transition-delay: 100ms">
+                    <div class="text-electric text-2xl mb-4 opacity-80 group-hover:opacity-100 transition-opacity"><i class="fas fa-globe"></i></div>
+                    <h3 class="font-display font-bold text-lg text-white mb-2">Global-Ready Design</h3>
+                    <p class="text-sm text-muted leading-relaxed">Minimal, conversion-focused design optimized for international audiences.</p>
+                </div>
+                <div class="p-8 text-center md:text-left reveal group" style="transition-delay: 200ms">
+                    <div class="text-pumpkin text-2xl mb-4 opacity-80 group-hover:opacity-100 transition-opacity"><i class="fas fa-chart-line"></i></div>
+                    <h3 class="font-display font-bold text-lg text-white mb-2">Results Focused</h3>
+                    <p class="text-sm text-muted leading-relaxed">Content built for engagement, scale, and measurable ROI.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVICES GRID -->
+    <section id="services" class="py-32 relative z-10">
+        <div class="container mx-auto px-6">
+            <div class="mb-20 reveal">
+                <h2 class="font-display font-bold text-5xl mb-6 text-white">Services</h2>
+                <p class="text-muted max-w-xl text-xl font-light">AI + Human. Fast. Effective. We combine technology with agency-level creativity.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="cards-container">
+                <!-- Social Media -->
+                <div class="spotlight-card rounded-3xl p-10 reveal group">
+                    <div class="card-content">
+                        <div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-pumpkin mb-8 text-xl border border-white/10 group-hover:border-pumpkin/50 transition-colors">
+                            <i class="fas fa-share-nodes"></i>
+                        </div>
+                        <h3 class="font-display font-bold text-2xl mb-4 text-white">Social Media Management</h3>
+                        <p class="text-muted text-sm mb-8 leading-relaxed">Captions, carousels, strategy, and community scheduling.</p>
+                        <ul class="text-xs text-muted/80 space-y-3 mb-8 mt-auto font-mono">
+                            <li class="flex items-center"><span class="text-pumpkin mr-3">></span>Content calendar</li>
+                            <li class="flex items-center"><span class="text-pumpkin mr-3">></span>12–30 posts/mo</li>
+                        </ul>
+                        <a href="#" onclick="openModal(); return false;" class="text-xs font-bold uppercase tracking-widest text-white hover:text-pumpkin transition-colors flex items-center">See Sample <i class="fas fa-arrow-right ml-2 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0"></i></a>
+                    </div>
+                </div>
+
+                <!-- Web Design -->
+                <div class="spotlight-card rounded-3xl p-10 reveal group" style="transition-delay: 100ms">
+                    <div class="card-content">
+                        <div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-electric mb-8 text-xl border border-white/10 group-hover:border-electric/50 transition-colors">
+                            <i class="fas fa-laptop-code"></i>
+                        </div>
+                        <h3 class="font-display font-bold text-2xl mb-4 text-white">Website Design</h3>
+                        <p class="text-muted text-sm mb-8 leading-relaxed">Fast portfolio sites, and enterprise corporate experiences.</p>
+                        <ul class="text-xs text-muted/80 space-y-3 mb-8 mt-auto font-mono">
+                            <li class="flex items-center"><span class="text-electric mr-3">></span>Wireframe & Copy</li>
+                            <li class="flex items-center"><span class="text-electric mr-3">></span>Mobile-first responsive</li>
+                        </ul>
+                        <a href="#" onclick="openModal(); return false;" class="text-xs font-bold uppercase tracking-widest text-white hover:text-electric transition-colors flex items-center">See Sample <i class="fas fa-arrow-right ml-2 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0"></i></a>
+                    </div>
+                </div>
+
+                <!-- Landing Pages / Lead Generation -->
+                <div class="spotlight-card rounded-3xl p-10 reveal group" style="transition-delay: 200ms">
+                    <div class="card-content">
+                        <div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-pumpkin mb-8 text-xl border border-white/10 group-hover:border-pumpkin/50 transition-colors">
+                            <i class="fas fa-bullseye"></i>
+                        </div>
+                        <h3 class="font-display font-bold text-2xl mb-4 text-white">Landing Pages / Lead Gen</h3>
+                        <p class="text-muted text-sm mb-8 leading-relaxed">High-performance funnels engineered for Solar and Real Estate conversion.</p>
+                        <ul class="text-xs text-muted/80 space-y-3 mb-8 mt-auto font-mono">
+                            <li class="flex items-center"><span class="text-pumpkin mr-3">></span>A/B Testing</li>
+                            <li class="flex items-center"><span class="text-pumpkin mr-3">></span>CRM Integration</li>
+                        </ul>
+                        <a href="#" onclick="openModal(); return false;" class="text-xs font-bold uppercase tracking-widest text-white hover:text-pumpkin transition-colors flex items-center">See Sample <i class="fas fa-arrow-right ml-2 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0"></i></a>
+                    </div>
+                </div>
+
+                <!-- Branding -->
+                <div class="spotlight-card rounded-3xl p-10 reveal group">
+                    <div class="card-content">
+                        <div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-electric mb-8 text-xl border border-white/10 group-hover:border-electric/50 transition-colors">
+                            <i class="fas fa-fingerprint"></i>
+                        </div>
+                        <h3 class="font-display font-bold text-2xl mb-4 text-white">Branding</h3>
+                        <p class="text-muted text-sm mb-8 leading-relaxed">Logo, color kit, typography, brand assets.</p>
+                        <ul class="text-xs text-muted/80 space-y-3 mb-8 mt-auto font-mono">
+                            <li class="flex items-center"><span class="text-electric mr-3">></span>Logo & Palette</li>
+                            <li class="flex items-center"><span class="text-electric mr-3">></span>Brand Guide</li>
+                        </ul>
+                        <a href="#" onclick="openModal(); return false;" class="text-xs font-bold uppercase tracking-widest text-white hover:text-electric transition-colors flex items-center">See Sample <i class="fas fa-arrow-right ml-2 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0"></i></a>
+                    </div>
+                </div>
+
+                <!-- Automation -->
+                <div class="spotlight-card rounded-3xl p-10 reveal group" style="transition-delay: 100ms">
+                    <div class="card-content">
+                        <div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-pumpkin mb-8 text-xl border border-white/10 group-hover:border-pumpkin/50 transition-colors">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <h3 class="font-display font-bold text-2xl mb-4 text-white">Automation</h3>
+                        <p class="text-muted text-sm mb-8 leading-relaxed">Lead capture bots, email automation, Zapier workflows.</p>
+                        <ul class="text-xs text-muted/80 space-y-3 mb-8 mt-auto font-mono">
+                            <li class="flex items-center"><span class="text-pumpkin mr-3">></span>Lead Bots</li>
+                            <li class="flex items-center"><span class="text-pumpkin mr-3">></span>Zapier Workflows</li>
+                        </ul>
+                        <a href="#" onclick="openModal(); return false;" class="text-xs font-bold uppercase tracking-widest text-white hover:text-pumpkin transition-colors flex items-center">See Sample <i class="fas fa-arrow-right ml-2 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0"></i></a>
+                    </div>
+                </div>
+
+                <!-- Enterprise -->
+                <div class="spotlight-card rounded-3xl p-10 reveal group flex flex-col justify-center items-center text-center bg-gradient-to-br from-white/[0.03] to-pumpkin/10" style="transition-delay: 200ms">
+                    <div class="card-content">
+                        <h3 class="font-display font-bold text-2xl mb-4 text-white">Enterprise Solutions</h3>
+                        <p class="text-muted text-sm mb-8">Custom AI-powered scalable architectures for global brands.</p>
+                        <button onclick="openModal()" class="px-8 py-3 bg-white text-bg rounded-full text-xs font-bold uppercase tracking-widest hover:scale-105 transition-transform shadow-lg">Start Project</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- REVIEWS SECTION -->
+    <section id="reviews" class="py-32 relative border-t border-white/5">
+        <div class="container mx-auto px-6">
+            <div class="mb-20 reveal text-center">
+                <h2 class="font-display font-bold text-4xl mb-4 text-white">Client Success</h2>
+                <p class="text-muted max-w-2xl mx-auto text-lg font-light">Join founders who scaled faster with Nano Pumpkin.</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 mb-24 reveal">
+                <div class="p-8 rounded-2xl text-center border-r border-white/5 last:border-r-0">
+                    <div class="text-6xl font-display font-bold text-pumpkin mb-3 tracking-tighter">98%</div>
+                    <p class="text-xs text-white uppercase tracking-widest font-bold">Client Satisfaction</p>
+                </div>
+                <div class="p-8 rounded-2xl text-center border-r border-white/5 last:border-r-0" style="transition-delay: 100ms">
+                    <div class="text-6xl font-display font-bold text-electric mb-3 tracking-tighter">24h</div>
+                    <p class="text-xs text-white uppercase tracking-widest font-bold">Avg. Turnaround</p>
+                </div>
+                <div class="p-8 rounded-2xl text-center" style="transition-delay: 200ms">
+                    <div class="text-6xl font-display font-bold text-white mb-3 tracking-tighter">500+</div>
+                    <p class="text-xs text-white uppercase tracking-widest font-bold">Assets Delivered</p>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="reviews-container">
+                <div class="spotlight-card p-10 rounded-2xl reveal flex flex-col h-full">
+                    <div class="card-content h-full flex flex-col">
+                        <div class="flex items-center gap-1 text-pumpkin mb-6 text-xs">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                        </div>
+                        <p class="text-gray-300 text-sm mb-8 leading-relaxed flex-grow">"Nano Pumpkin transformed our solar leads. The speed is unreal—we went from concept to published campaign in 48 hours. The quality is agency-grade."</p>
+                        <div class="flex items-center gap-4 mt-auto border-t border-white/5 pt-6">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-pumpkin to-red-500 flex items-center justify-center font-bold text-white text-xs">SL</div>
+                            <div>
+                                <p class="text-white text-sm font-bold">Sarah L.</p>
+                                <p class="text-[10px] uppercase tracking-wider text-muted">Marketing Director, TechFlow</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="spotlight-card p-10 rounded-2xl reveal flex flex-col h-full" style="transition-delay: 100ms">
+                    <div class="card-content h-full flex flex-col">
+                        <div class="flex items-center gap-1 text-electric mb-6 text-xs">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                        </div>
+                        <p class="text-gray-300 text-sm mb-8 leading-relaxed flex-grow">"Finally, a team that understands Real Estate ROI. The IDX site they built doubled our local property inquiries in one month."</p>
+                        <div class="flex items-center gap-4 mt-auto border-t border-white/5 pt-6">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-electric to-purple-600 flex items-center justify-center font-bold text-white text-xs">JK</div>
+                            <div>
+                                <p class="text-white text-sm font-bold">James K.</p>
+                                <p class="text-[10px] uppercase tracking-wider text-muted">Founder, Apex Ventures</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="spotlight-card p-10 rounded-2xl reveal flex flex-col h-full" style="transition-delay: 200ms">
+                    <div class="card-content h-full flex flex-col">
+                        <div class="flex items-center gap-1 text-white mb-6 text-xs">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                        </div>
+                        <p class="text-gray-300 text-sm mb-8 leading-relaxed flex-grow">"The solar launch kit was flawless. Premium design that builds instant trust with homeowners."</p>
+                        <div class="flex items-center gap-4 mt-auto border-t border-white/5 pt-6">
+                            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-bold text-white text-xs border border-white/10">ER</div>
+                            <div>
+                                <p class="text-white text-sm font-bold">Elena R.</p>
+                                <p class="text-[10px] uppercase tracking-wider text-muted">CEO, Luxe Living</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- GLOBAL PORTFOLIO -->
+    <section id="portfolio" class="py-32 relative">
+        <div class="absolute inset-0 bg-gradient-to-b from-bg via-electric/5 to-bg pointer-events-none"></div>
+        <div class="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] pointer-events-none"></div>
+
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="mb-20 reveal">
+                <h2 class="font-display font-bold text-5xl mb-4 text-white">Global Portfolio</h2>
+                <p class="text-muted text-lg">Specialized web solutions for Solar & Real Estate.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <!-- Portfolio Item 1: Modern Solar Home -->
+                <div class="group reveal rounded-2xl overflow-hidden relative spotlight-card p-4">
+                    <div class="card-content">
+                        <div class="portfolio-image-wrapper rounded-xl overflow-hidden aspect-[4/3] mb-6">
+                            <img src="https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&q=80&w=800" alt="Solar Residential" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex items-center justify-between mb-2 px-2">
+                            <span class="text-[10px] uppercase tracking-widest text-pumpkin font-bold">Solar Energy</span>
+                            <span class="text-[10px] text-muted font-medium">Web App</span>
+                        </div>
+                        <h3 class="font-display font-bold text-xl text-white px-2">SunSwell Residential</h3>
+                        <p class="text-muted text-sm px-2 mt-2 leading-relaxed">High-converting landing page ecosystem for residential solar installs.</p>
+                    </div>
+                </div>
+
+                <!-- Portfolio Item 2: Futuristic Real Estate -->
+                <div class="group reveal rounded-2xl overflow-hidden relative spotlight-card p-4" style="transition-delay: 100ms">
+                    <div class="card-content">
+                        <div class="portfolio-image-wrapper rounded-xl overflow-hidden aspect-[4/3] mb-6">
+                            <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800" alt="Modern Architecture" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex items-center justify-between mb-2 px-2">
+                            <span class="text-[10px] uppercase tracking-widest text-electric font-bold">Real Estate</span>
+                            <span class="text-[10px] text-muted font-medium">B2B Platform</span>
+                        </div>
+                        <h3 class="font-display font-bold text-xl text-white px-2">Skyline NYC</h3>
+                        <p class="text-muted text-sm px-2 mt-2 leading-relaxed">A luxury listing engine with seamless 3D virtual tour integration.</p>
+                    </div>
+                </div>
+
+                <!-- Portfolio Item 3: Commercial Solar Grid -->
+                <div class="group reveal rounded-2xl overflow-hidden relative spotlight-card p-4" style="transition-delay: 200ms">
+                    <div class="card-content">
+                        <div class="portfolio-image-wrapper rounded-xl overflow-hidden aspect-[4/3] mb-6">
+                            <img src="https://images.unsplash.com/photo-1558449028-b53a39d100fc?auto=format&fit=crop&q=80&w=800" alt="Commercial Solar" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex items-center justify-between mb-2 px-2">
+                            <span class="text-[10px] uppercase tracking-widest text-pumpkin font-bold">Solar Energy</span>
+                            <span class="text-[10px] text-muted font-medium">Automation</span>
+                        </div>
+                        <h3 class="font-display font-bold text-xl text-white px-2">VoltLogic Commercial</h3>
+                        <p class="text-muted text-sm px-2 mt-2 leading-relaxed">Lead generation system for national commercial solar developments.</p>
+                    </div>
+                </div>
+
+                <!-- Portfolio Item 4: Obsidian Heights (Skyscraper) -->
+                <div class="group reveal rounded-2xl overflow-hidden relative spotlight-card p-4">
+                    <div class="card-content">
+                        <div class="portfolio-image-wrapper rounded-xl overflow-hidden aspect-[4/3] mb-6">
+                            <img src="https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&q=80&w=800" alt="Luxury Skyscraper" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex items-center justify-between mb-2 px-2">
+                            <span class="text-[10px] uppercase tracking-widest text-electric font-bold">Real Estate</span>
+                            <span class="text-[10px] text-muted font-medium">Mega Structure</span>
+                        </div>
+                        <h3 class="font-display font-bold text-xl text-white px-2">Obsidian Heights</h3>
+                        <p class="text-muted text-sm px-2 mt-2 leading-relaxed">A record-breaking vertical estate in NYC with integrated AI-driven smart systems.</p>
+                    </div>
+                </div>
+
+                <!-- Portfolio Item 5: Tech Solar UI -->
+                <div class="group reveal rounded-2xl overflow-hidden relative spotlight-card p-4" style="transition-delay: 100ms">
+                    <div class="card-content">
+                        <div class="portfolio-image-wrapper rounded-xl overflow-hidden aspect-[4/3] mb-6">
+                            <img src="https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?auto=format&fit=crop&q=80&w=800" alt="Solar Analytics" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex items-center justify-between mb-2 px-2">
+                            <span class="text-[10px] uppercase tracking-widest text-pumpkin font-bold">Solar Tech</span>
+                            <span class="text-[10px] text-muted font-medium">Analytics</span>
+                        </div>
+                        <h3 class="font-display font-bold text-xl text-white px-2">SolarGrid Analytics</h3>
+                        <p class="text-muted text-sm px-2 mt-2 leading-relaxed">Installer dashboard for live performance monitoring and lead scoring.</p>
+                    </div>
+                </div>
+
+                <!-- Portfolio Item 6: Modern Interior Search -->
+                <div class="group reveal rounded-2xl overflow-hidden relative spotlight-card p-4" style="transition-delay: 200ms">
+                    <div class="card-content">
+                        <div class="portfolio-image-wrapper rounded-xl overflow-hidden aspect-[4/3] mb-6">
+                            <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800" alt="Modern Interior" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex items-center justify-between mb-2 px-2">
+                            <span class="text-[10px] uppercase tracking-widest text-electric font-bold">Real Estate</span>
+                            <span class="text-[10px] text-muted font-medium">IDX Platform</span>
+                        </div>
+                        <h3 class="font-display font-bold text-xl text-white px-2">Miami Elite Brokers</h3>
+                        <p class="text-muted text-sm px-2 mt-2 leading-relaxed">High-performance IDX-integrated site for rapid listing exploration.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ABOUT SECTION -->
+    <section id="about" class="py-24 relative">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-2 gap-20 items-center">
+                <div class="reveal">
+                    <h2 class="font-display font-bold text-4xl mb-6 text-white tracking-tighter">About nano pumpkin</h2>
+                    <p class="text-muted text-lg mb-10 leading-relaxed font-light">
+                        <span class="text-white font-medium">nano pumpkin</span> blends AI performance with human creativity to build websites, social campaigns, automation systems, and scalable digital content for ambitious brands worldwide. We focus on clarity, speed, measurable results, and international quality.
+                    </p>
+                    <div class="flex gap-10">
+                        <div class="border-l-2 border-pumpkin pl-4">
+                            <p class="font-bold text-white text-lg">Growth & Strategy</p>
+                            <p class="text-xs text-muted uppercase tracking-wider">Our Core Mission</p>
+                        </div>
+                        <div class="border-l-2 border-electric pl-4">
+                            <p class="font-bold text-white text-lg">Creative Engineering</p>
+                            <p class="text-xs text-muted uppercase tracking-wider">Our Methodology</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="reveal relative">
+                    <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800" alt="Office" class="rounded-[2rem] opacity-80 border border-white/10 w-full shadow-2xl grayscale transition-all duration-700 hover:grayscale-0">
+                    <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-pumpkin/20 rounded-full blur-[60px]"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-black/80 border-t border-border pt-20 pb-10">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-4 gap-12 mb-16 text-sm">
+                <div class="col-span-1">
+                    <div class="flex flex-col items-start gap-2 mb-6">
+                        <div class="relative">
+                            <div class="absolute inset-0 bg-pumpkin/15 rounded-full blur-lg scale-110 opacity-60"></div>
+                            <img src="logo2.png" alt="Nano Pumpkin Logo" class="h-12 w-auto object-contain relative z-10" style="filter: drop-shadow(0 0 20px rgba(255, 107, 0, 0.4));" onerror="this.src='https://placehold.co/80x80/FF6B00/FFFFFF?text=NP'">
+                        </div>
+                        <span class="font-display text-[10px] font-bold lowercase tracking-[0.2em] text-white">
+                            nano pumpkin
+                        </span>
+                    </div>
+                    <p class="text-muted text-xs mb-4 leading-relaxed">Minimal AI-powered content & websites for scaling brands.</p>
+                    <div class="flex flex-col gap-2 text-muted">
+                        <a href="mailto:team@nanopumpkin.com" class="hover:text-pumpkin transition-colors">team@nanopumpkin.com</a>
+                        <div class="flex gap-5 mt-2">
+                            <a href="#" class="hover:text-white transition-colors text-lg"><i class="fab fa-linkedin"></i></a>
+                            <a href="#" class="hover:text-white transition-colors text-lg"><i class="fab fa-instagram"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="md:col-start-3">
+                    <h4 class="font-bold text-white mb-6 uppercase text-xs tracking-widest">Services</h4>
+                    <ul class="space-y-3 text-muted">
+                        <li><a href="#" class="hover:text-pumpkin transition-colors">Social Media</a></li>
+                        <li><a href="#" class="hover:text-pumpkin transition-colors">Web Design</a></li>
+                        <li><a href="#" class="hover:text-pumpkin transition-colors">Automation</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-white mb-6 uppercase text-xs tracking-widest">Company</h4>
+                    <ul class="space-y-3 text-muted">
+                        <li><a href="#portfolio" class="hover:text-pumpkin transition-colors">Portfolio</a></li>
+                        <li><a href="#reviews" class="hover:text-pumpkin transition-colors">Reviews</a></li>
+                        <li><a href="#about" class="hover:text-pumpkin transition-colors">About</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-muted gap-4">
+                <p>© 2025 nano pumpkin. All rights reserved.</p>
+                <p>Designed in the Void.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODAL -->
+    <div id="contact-modal" class="modal fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4">
+        <div class="spotlight-card rounded-2xl w-full max-w-lg relative overflow-hidden bg-bg border border-pumpkin/20 shadow-[0_0_50px_rgba(255,122,45,0.1)]">
+            <button onclick="closeModal()" class="absolute top-6 right-6 text-muted hover:text-white transition-colors z-20">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            <div class="p-10 card-content">
+                <h2 class="font-display font-bold text-3xl mb-2 text-white">Start Your Project</h2>
+                <p class="text-muted text-sm mb-6">Reach out to <span class="text-pumpkin font-bold">team@nanopumpkin.com</span> or fill below.</p>
+                <form id="lead-form" onsubmit="handleFormSubmit(event)" class="space-y-5">
+                    <div id="form-success" class="hidden bg-green-500/10 border border-green-500/20 text-green-400 p-4 rounded-lg text-sm text-center">Request received!</div>
+                    <div class="grid grid-cols-2 gap-5">
+                        <input type="text" required class="w-full bg-white/5 border border-border rounded-lg p-3 text-sm text-white focus:border-pumpkin focus:outline-none placeholder:text-muted" placeholder="Name">
+                        <input type="email" required class="w-full bg-white/5 border border-border rounded-lg p-3 text-sm text-white focus:border-pumpkin focus:outline-none placeholder:text-muted" placeholder="Email">
+                    </div>
+                    <button type="submit" class="w-full bg-pumpkin text-white font-bold py-4 rounded-lg hover:bg-white hover:text-pumpkin transition-all uppercase tracking-wider text-xs">Request Sample</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        // Global variables
+        const modal = document.getElementById('contact-modal');
+        const successMsg = document.getElementById('form-success');
+
+        // Modal Functions
+        window.openModal = function() {
+            modal.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        window.closeModal = function() {
+            modal.classList.remove('open');
+            document.body.style.overflow = 'auto';
+        }
+
+        const initThreeJS = () => {
+            const container = document.getElementById('canvas-container');
+            const scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x050507, 0.0025);
+            const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.z = 50;
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+            const particleCount = 700;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            const shifts = new Float32Array(particleCount);
+            for(let i=0; i<particleCount; i++) {
+                positions[i*3] = (Math.random() - 0.5) * 150;
+                positions[i*3+1] = (Math.random() - 0.5) * 100 - 10;
+                positions[i*3+2] = (Math.random() - 0.5) * 100;
+                shifts[i] = Math.random() * Math.PI * 2;
+            }
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const material = new THREE.PointsMaterial({ color: 0x4DA6FF, size: 0.5, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending });
+            const particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+            const clock = new THREE.Clock();
+            const animate = () => {
+                requestAnimationFrame(animate);
+                const time = clock.getElapsedTime();
+                const pos = particles.geometry.attributes.position.array;
+                for(let i=0; i<particleCount; i++) {
+                    pos[i*3+1] += Math.sin(time + shifts[i]) * 0.02;
+                    pos[i*3+1] += 0.05;
+                    if(pos[i*3+1] > 50) pos[i*3+1] = -50;
+                }
+                particles.geometry.attributes.position.needsUpdate = true;
+                particles.rotation.y += 0.001;
+                renderer.render(scene, camera);
+            };
+            animate();
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+        };
+        initThreeJS();
+
+        document.addEventListener('mousemove', (e) => {
+            document.querySelectorAll('.spotlight-card').forEach(card => {
+                const rect = card.getBoundingClientRect();
+                card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+                card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+            });
+        });
+
+        const btn = document.getElementById('mobile-menu-btn');
+        const menu = document.getElementById('mobile-menu');
+        btn.addEventListener('click', () => menu.classList.toggle('hidden'));
+
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        window.handleFormSubmit = function(e) {
+            e.preventDefault();
+            setTimeout(() => { successMsg.classList.remove('hidden'); setTimeout(() => closeModal(), 2000); }, 1000);
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('active'); });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    </script>
+</body>
+</html>
